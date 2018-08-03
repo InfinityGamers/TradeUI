@@ -1,0 +1,17 @@
+---
+no_items_player: '&cThis player does not have any items to sell, try later :D'
+no_items_public: '&cNo items are available in the public shop, try later :D'
+no_offers: '&cOops! No items are available from you D:'
+no_longer_available: '&cSorry! It seems that this item is not longer available.'
+enter_valid_price: '&cPlease enter a valid price.'
+not_enough_to_sell: "&cYou don''t have enough of this item to sell.\n&2You have: &c@have\n&2You chose: &6@chose"
+selling_item: "&2@player is selling &d@item &r&d(x@amount) &2for &d@price &2money!\n&2To view type: &6/ah @player"
+no_sufficient_funds: '&6Sorry, you do not have enough money to buy this item.'
+bought_item: "&2@player has bough &d@item &r&d(x@amount) &2for &d@price &2money!"
+inventory_full: '&cYour inventory is too full to buy this item! &2Make space then type: &6/cart'
+inventory_full_2: "&cYour don''t have enough space in your inventory!\n&6Please make space and then try deleting it again."
+no_recent_items: '&6You don''t have any items you''ve looked at recently.'
+no_empty: '&cYour inventory cannot be empty.'
+deleted_item: '&2@player has removed &d@item &r&d(x@amount) &2from the public shop.'
+no_more_items: '&eThere are no more items to see on that page.'
+...
