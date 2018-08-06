@@ -3,6 +3,8 @@
 namespace TradeUI;
 
 use onebone\economyapi\EconomyAPI;
+use pocketmine\item\enchantment\Enchantment;
+use pocketmine\item\enchantment\EnchantmentInstance;
 use pocketmine\item\Item;
 use pocketmine\Player;
 use pocketmine\plugin\PluginBase;
@@ -349,13 +351,12 @@ class TradeUI extends PluginBase{
                         $form->setId($this->CONFIRM_PURCHASE_UI_ID);
                         $form->setTitle(RandomUtils::colorMessage("&e&k|&r&5&lDO YOU WANT TO BUY THIS ITEM?&r&k&e|"));
                         $content = "";
-                        $enchants = implode(", ", explode(';', $dat['enchants']));
                         $content .= RandomUtils::colorMessage("&l&e===========================&r\n");
                         $content .= RandomUtils::colorMessage("&dSeller: &7" . $dat['username'] . "\n");
                         $content .= RandomUtils::colorMessage("&dItem Name: &7" . $dat['trade'] . " &r&5(" . Item::get($dat['itemId'])->getName() . ")\n");
                         $content .= RandomUtils::colorMessage("&dPrice: &7" . $dat['price'] . "\n");
                         $content .= RandomUtils::colorMessage("&dAmount: &7" . $dat['amount'] . "\n");
-                        $content .= RandomUtils::colorMessage("&dEnchantments: &7" . ($enchants === '' ? 'none' : $enchants) . "\n");
+                        $content .= RandomUtils::colorMessage("&dEnchantments: &7" . $this->formatEnchantmentIdsAsName($dat['enchants']) . "\n");
                         $content .= RandomUtils::colorMessage("&dMarket ID: &7" . $dat['id'] . "\n");
                         $content .= RandomUtils::colorMessage("&l&e===========================\n");
                         $form->setContent($content);
@@ -380,13 +381,12 @@ class TradeUI extends PluginBase{
                         $form->setId($this->CONFIRM_DELETE_OFFER_UI_ID);
                         $form->setTitle(RandomUtils::colorMessage("&e&k|&r&5&lDO YOU WANT TO REMOVE THIS ITEM?&r&k&e|"));
                         $content = "";
-                        $enchants = implode(", ", explode(';', $dat['enchants']));
                         $content .= RandomUtils::colorMessage("&l&e===========================&r\n");
                         $content .= RandomUtils::colorMessage("&4&lNOTE: &7all your items will be returned.&r\n");
                         $content .= RandomUtils::colorMessage("&dItem Name: &7" . $dat['trade'] . " &r&5(" . Item::get($dat['itemId'])->getName() . ")\n");
                         $content .= RandomUtils::colorMessage("&dPrice: &7" . $dat['price'] . "\n");
                         $content .= RandomUtils::colorMessage("&dAmount: &7" . $dat['amount'] . "\n");
-                        $content .= RandomUtils::colorMessage("&dEnchantments: &7" . ($enchants === '' ? 'none' : $enchants) . "\n");
+                        $content .= RandomUtils::colorMessage("&dEnchantments: &7" . $this->formatEnchantmentIdsAsName($dat['enchants']) . "\n");
                         $content .= RandomUtils::colorMessage("&dMarket ID: &7" . $dat['id'] . "\n");
                         $content .= RandomUtils::colorMessage("&l&e===========================\n");
                         $form->setContent($content);
@@ -412,6 +412,51 @@ class TradeUI extends PluginBase{
                         $count += $i->getCount();
                 }
                 return $count;
+        }
+
+        /**
+         *
+         * @param string $enchants
+         *
+         * @return string
+         *
+         */
+        protected function formatEnchantmentIdsAsName(string $enchants): string{
+                if(strlen($enchants) === 0){
+                        return 'none';
+                }
+
+                $return = [];
+                $enchants = $this->parseEnchantments($enchants);
+
+                foreach($enchants as $enchant){
+                        $return[] = $enchant->getType()->getName() . " (" . $enchant->getLevel() . ")";
+                }
+
+                return implode(", ", $return);
+        }
+
+        /**
+         *
+         * @param array|string $enchants
+         *
+         * @return EnchantmentInstance[]
+         *
+         */
+        protected function parseEnchantments($enchants): array{
+                /** @var EnchantmentInstance[] $return */
+                $return = [];
+                if(is_string($enchants)){
+                        $enchants = explode(';', $enchants);
+                }
+                foreach($enchants as $enchant){
+                        $parts = explode(':', $enchant);
+                        $enchant = Enchantment::getEnchantment((int)$parts[0]);
+                        if($enchant !== null){
+                                $return[] = new EnchantmentInstance($enchant, (int)$parts[1]);
+                        }
+                }
+                return $return;
         }
 
         /**
@@ -448,84 +493,87 @@ class TradeUI extends PluginBase{
                         }
                                 break;
                         case $this->SHOP_UI_ID: {
-                                $ids = $this->cache[$username]["ids"];
-                                if(!isset($ids[$formData])){
-                                        if($formData === 0){
-                                                $this->queue[$username]['type'] = 0;
-                                                if(!$this->getShopForm($player)){
-                                                        $player->sendMessage(RandomUtils::colorMessage($this->getMessage('no_more_items')));
-                                                }
-                                        }else{
-                                                $this->queue[$username]['type'] = 1;
-                                                if(!$this->getShopForm($player)){
-                                                        $player->sendMessage(RandomUtils::colorMessage($this->getMessage('no_more_items')));
-                                                }
-                                        }
-                                        return;
-                                }
-
-                                $id = $ids[$formData];
-                                $this->getConfirmPurchaseForm($player, $id);
-                                $this->resetCache($username);
-                                $this->cache[$username]["id"] = $id;
-                        }
-                                break;
-                        case $this->SELL_UI_ID: {
-                                if($formData[0] !== (string)(int)($formData[0]) or $formData[0] === null){
-                                        $player->sendMessage(RandomUtils::colorMessage($this->getMessage('enter_valid_price')));
-                                        return;
-                                }
-                                $item = $player->getInventory()->getItem($this->getCache($username)["item"]);
-                                $c = $this->getCountFromItem($player, $item);
-                                if($c < $formData[1]){
-                                        $player->sendMessage(RandomUtils::colorMessage(str_replace(['@chose', '@have'], [$formData[1], $c], $this->getMessage('not_enough_to_sell'))));
-                                        return;
-                                }
-                                $item->setCount($formData[1]);
-                                $player->getInventory()->removeItem($item);
-                                $enchants = [];
-                                foreach($item->getEnchantments() as $enchantment){
-                                        $enchants[] = $enchantment->getType()->getName() . ':' . $enchantment->getLevel();
-                                }
-                                $this->insert($username, $item->getName(), $item->getId(), $item->getDamage(), (int) $formData[0], $formData[1], implode(';', $enchants));
-                                $this->getServer()->broadcastMessage(RandomUtils::colorMessage(str_replace(["@player", "@item", "@price", "@amount"], [$username, $item->getName(), $formData[0], $formData[1]], $this->getMessage('selling_item'))));
-                                //$this->getServer()->broadcastMessage(TextFormat::GREEN . "To view, type: " . TextFormat::RED . "/ah " . $username);
-                        }
-                                break;
-                        case $this->CONFIRM_PURCHASE_UI_ID: {
-                                if($formData === 0){
-                                        $dat = $this->fetchFromId($this->cache[$username]["id"]);
-                                        if(count($dat) > 0){
-                                                $item = Item::get($dat['itemId'], $dat['itemMeta']);
-                                                $item->setCount($dat['amount']);
-                                                if(strtolower($item->getName()) !== strtolower($dat['trade'])){
-                                                        $item->setCustomName($dat['trade']);
-                                                }
-                                                if($player->getInventory()->canAddItem($item)){
-                                                        if($this->economyProvider->getMoney($dat['username']) < $dat['price']){
-                                                                $player->sendMessage(RandomUtils::colorMessage($this->getMessage('no_sufficient_funds')));
-                                                                return;
-                                                        }
-                                                        $this->economyProvider->addMoney($dat['username'], $dat['price']);
-                                                        $this->economyProvider->subtractMoney($player, $dat['price']);
-                                                        $player->getInventory()->addItem($item);
-                                                        $this->deleteFromId($dat['id']);
-                                                        $this->resetCache($username);
-                                                        $pl = $this->getServer()->getPlayer($dat['username']);
-                                                        if($pl !== null || $pl->isOnline()){
-                                                                $this->getServer()->broadcastMessage(RandomUtils::colorMessage(str_replace(["@player", "@item", "@price", "@amount"], [$username, $item->getName(), $dat['price'], $dat['amount']], $this->getMessage('bought_item'))));
-                                                        }else{
-                                                                $this->cache[$dat['username']]['purchasesMessage'] .=  TextFormat::YELLOW . $username .  TextFormat::GREEN . " bought " . $item->getName() . " (x" . $dat['amount'] . ") from you for $" . $dat['price'] . "\n";
-                                                                $this->getServer()->broadcastMessage(TextFormat::GREEN . $username . " has bought " . $item->getName() . " (x" . $dat['amount'] . ") from " . $dat['username'] . " for $" . $dat['price']);
+                                        $ids = $this->cache[$username]["ids"];
+                                        if(!isset($ids[$formData])){
+                                                if($formData === 0){
+                                                        $this->queue[$username]['type'] = 0;
+                                                        if(!$this->getShopForm($player)){
+                                                                $player->sendMessage(RandomUtils::colorMessage($this->getMessage('no_more_items')));
                                                         }
                                                 }else{
-                                                        $player->sendMessage(RandomUtils::colorMessage($this->getMessage('inventory_full')));
+                                                        $this->queue[$username]['type'] = 1;
+                                                        if(!$this->getShopForm($player)){
+                                                                $player->sendMessage(RandomUtils::colorMessage($this->getMessage('no_more_items')));
+                                                        }
                                                 }
-                                        }else{
-                                                $player->sendMessage(RandomUtils::colorMessage($this->getMessage('no_longer_available')));
+                                                return;
+                                        }
+
+                                        $id = $ids[$formData];
+                                        $this->getConfirmPurchaseForm($player, $id);
+                                        $this->resetCache($username);
+                                        $this->cache[$username]["id"] = $id;
+                                }
+                                break;
+                        case $this->SELL_UI_ID: {
+                                        if($formData[0] !== (string)(int)($formData[0]) or $formData[0] === null){
+                                                $player->sendMessage(RandomUtils::colorMessage($this->getMessage('enter_valid_price')));
+                                                return;
+                                        }
+                                        $item = $player->getInventory()->getItem($this->getCache($username)["item"]);
+                                        $c = $this->getCountFromItem($player, $item);
+                                        if($c < $formData[1]){
+                                                $player->sendMessage(RandomUtils::colorMessage(str_replace(['@chose', '@have'], [$formData[1], $c], $this->getMessage('not_enough_to_sell'))));
+                                                return;
+                                        }
+                                        $item->setCount($formData[1]);
+                                        $player->getInventory()->removeItem($item);
+                                        $enchants = [];
+                                        foreach($item->getEnchantments() as $enchantment){
+                                                $enchants[] = $enchantment->getType()->getId() . ':' . $enchantment->getLevel();
+                                        }
+                                        $this->insert($username, $item->getName(), $item->getId(), $item->getDamage(), (int)$formData[0], $formData[1], implode(';', $enchants));
+                                        $this->getServer()->broadcastMessage(RandomUtils::colorMessage(str_replace(["@player", "@item", "@price", "@amount"], [$username, $item->getName(), $formData[0], $formData[1]], $this->getMessage('selling_item'))));
+                                        //$this->getServer()->broadcastMessage(TextFormat::GREEN . "To view, type: " . TextFormat::RED . "/ah " . $username);
+                                }
+                                break;
+                        case $this->CONFIRM_PURCHASE_UI_ID: {
+                                        if($formData === 0){
+                                                $dat = $this->fetchFromId($this->cache[$username]["id"]);
+                                                if(count($dat) > 0){
+                                                        $item = Item::get($dat['itemId'], $dat['itemMeta']);
+                                                        $item->setCount($dat['amount']);
+                                                        foreach($this->parseEnchantments($dat['enchants']) as $enchantment){
+                                                                $item->addEnchantment($enchantment);
+                                                        }
+                                                        if(strtolower($item->getName()) !== strtolower($dat['trade'])){
+                                                                $item->setCustomName($dat['trade']);
+                                                        }
+                                                        if($player->getInventory()->canAddItem($item)){
+                                                                if($this->economyProvider->getMoney($dat['username']) < $dat['price']){
+                                                                        $player->sendMessage(RandomUtils::colorMessage($this->getMessage('no_sufficient_funds')));
+                                                                        return;
+                                                                }
+                                                                $this->economyProvider->addMoney($dat['username'], $dat['price']);
+                                                                $this->economyProvider->subtractMoney($player, $dat['price']);
+                                                                $player->getInventory()->addItem($item);
+                                                                $this->deleteFromId($dat['id']);
+                                                                $this->resetCache($username);
+                                                                $pl = $this->getServer()->getPlayer($dat['username']);
+                                                                if($pl !== null){
+                                                                        $this->getServer()->broadcastMessage(RandomUtils::colorMessage(str_replace(["@player", "@item", "@price", "@amount"], [$username, $item->getName(), $dat['price'], $dat['amount']], $this->getMessage('bought_item'))));
+                                                                }else{
+                                                                        $this->cache[$dat['username']]['purchasesMessage'] .= TextFormat::YELLOW . $username . TextFormat::GREEN . " bought " . $item->getName() . " (x" . $dat['amount'] . ") from you for $" . $dat['price'] . "\n";
+                                                                        $this->getServer()->broadcastMessage(TextFormat::GREEN . $username . " has bought " . $item->getName() . " (x" . $dat['amount'] . ") from " . $dat['username'] . " for $" . $dat['price']);
+                                                                }
+                                                        }else{
+                                                                $player->sendMessage(RandomUtils::colorMessage($this->getMessage('inventory_full')));
+                                                        }
+                                                }else{
+                                                        $player->sendMessage(RandomUtils::colorMessage($this->getMessage('no_longer_available')));
+                                                }
                                         }
                                 }
-                        }
                                 break;
                         case $this->MY_OFFERS_UI_ID: {
                                 $id = $this->cache[$username]["ids"][$formData];
@@ -540,6 +588,9 @@ class TradeUI extends PluginBase{
                                         $dat = $this->fetchFromId($id);
                                         $item = Item::get($dat['itemId'], $dat['itemMeta']);
                                         $item->setCount($dat['amount']);
+                                        foreach($this->parseEnchantments($dat['enchants']) as $enchantment){
+                                                $item->addEnchantment($enchantment);
+                                        }
                                         if(strtolower($item->getName()) !== strtolower($dat['trade'])){
                                                 $item->setCustomName($dat['trade']);
                                         }
