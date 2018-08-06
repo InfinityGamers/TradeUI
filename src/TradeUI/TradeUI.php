@@ -327,6 +327,7 @@ class TradeUI extends PluginBase{
                         $form = new SimpleForm();
                         $form->setId($this->MY_OFFERS_UI_ID);
                         $form->setTitle(RandomUtils::colorMessage("&e&k|&r&5&lYOUR OFFERS&r&k&e|"));
+                        $this->cache[$username]["ids"] = [];
                         foreach($s as $r){
                                 $this->cache[$username]["ids"][] = $r['id'];
                                 $form->setButton(RandomUtils::colorMessage("&l&k&e|&r&l&d{$r['trade']} &d(&8x{$r['amount']}&d)&e&k|"), "http://permat.comli.com/items/{$r['itemId']}-{$r['itemMeta']}.png");
@@ -446,6 +447,9 @@ class TradeUI extends PluginBase{
         protected function parseEnchantments($enchants): array{
                 /** @var EnchantmentInstance[] $return */
                 $return = [];
+                if(strlen($enchants) === 0){
+                        return [];
+                }
                 if(is_string($enchants)){
                         $enchants = explode(';', $enchants);
                 }
