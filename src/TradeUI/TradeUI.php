@@ -554,7 +554,7 @@ class TradeUI extends PluginBase{
                                                                 $item->setCustomName($dat['trade']);
                                                         }
                                                         if($player->getInventory()->canAddItem($item)){
-                                                                if($this->economyProvider->getMoney($dat['username']) < $dat['price']){
+                                                                if($this->economyProvider->getMoney($player) < $dat['price']){
                                                                         $player->sendMessage(RandomUtils::colorMessage($this->getMessage('no_sufficient_funds')));
                                                                         return;
                                                                 }
