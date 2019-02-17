@@ -1,11 +1,11 @@
 <?php
 
-namespace PrestigeSociety\TradeUI\Task;
+namespace InfinityGamers\TradeUI\Task;
 use pocketmine\Player;
 use pocketmine\scheduler\Task;
-use TradeUI\TradeUI;
-use TradeUI\UIForms\SimpleForm;
-use TradeUI\Utils\RandomUtils;
+use InfinityGamers\TradeUI\TradeUI;
+use InfinityGamers\TradeUI\UIForms\SimpleForm;
+use InfinityGamers\TradeUI\Utils\RandomUtils;
 class OpenPurchasesMessageForm extends Task{
         /** @var string */
         public $message;
@@ -13,13 +13,11 @@ class OpenPurchasesMessageForm extends Task{
         public $player;
 
         /**
-         *
          * OpenPurchasesMessageForm constructor.
          *
          * @param TradeUI $loader
          * @param string                 $message
          * @param Player                 $player
-         *
          */
         public function __construct(TradeUI $loader, string $message, Player $player){
                 $this->message = $message;
@@ -27,13 +25,11 @@ class OpenPurchasesMessageForm extends Task{
         }
 
         /**
-         *
          * Actions to execute when run
          *
          * @param int $currentTick
          *
          * @return void
-         *
          */
         public function onRun(int $currentTick){
                 $simpleForm = new SimpleForm();

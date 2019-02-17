@@ -1,0 +1,4 @@
+---
+# Currently Supported: SQLite3
+data-provider: sqlite
+...

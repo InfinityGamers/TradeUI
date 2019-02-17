@@ -1,33 +1,27 @@
 <?php
-
-namespace TradeUI;
-
+namespace InfinityGamers\TradeUI;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\server\DataPacketReceiveEvent;
 use pocketmine\network\mcpe\protocol\ModalFormResponsePacket;
-use PrestigeSociety\TradeUI\Task\OpenPurchasesMessageForm;
-
+use InfinityGamers\TradeUI\Task\OpenPurchasesMessageForm;
 class EventListener implements Listener{
-
         /** @var TradeUI */
         protected $loader;
 
+        protected $loaded = false;
+
         /**
-         *
          * EventListener constructor.
          *
          * @param TradeUI $loader
-         *
          */
         public function __construct(TradeUI $loader){
                 $this->loader = $loader;
         }
 
         /**
-         *
          * @param DataPacketReceiveEvent $event
-         *
          */
         public function onDataPacketReceiveEvent(DataPacketReceiveEvent $event) {
                 $pk = $event->getPacket();
@@ -35,7 +29,7 @@ class EventListener implements Listener{
                 if($pk instanceof ModalFormResponsePacket) {
                         $data = json_decode($pk->formData, true);
                         if($data !== null){
-                                $this->loader->handleFormResponse($player, $data, $pk->formId);
+                                $this->loader->formManager->handleForm($player, $data);
                         }else{
                                 $this->loader->resetCache($player);
                         }
@@ -43,9 +37,7 @@ class EventListener implements Listener{
         }
 
         /**
-         *
          * @param PlayerJoinEvent $event
-         *
          */
         public function onJoin(PlayerJoinEvent $event){
                 $player = $event->getPlayer();

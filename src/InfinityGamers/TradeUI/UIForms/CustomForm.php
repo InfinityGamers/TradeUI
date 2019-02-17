@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace TradeUI\UIForms;
+namespace InfinityGamers\TradeUI\UIForms;
 
 use pocketmine\network\mcpe\protocol\ModalFormRequestPacket;
 use pocketmine\Player;
-
+use function json_encode;
 class CustomForm {
 
         /** @var int */
@@ -15,9 +15,7 @@ class CustomForm {
         protected $formData = [];
 
         /**
-         *
          * CustomForm constructor.
-         *
          */
         public function __construct(){
                 $this->formData["type"] = "custom_form";
@@ -26,76 +24,60 @@ class CustomForm {
 
 
         /**
-         *
          * @param int $id
-         *
          */
         public function setId(int $id){
                 $this->id = $id;
         }
 
         /**
-         *
          * @return int
-         *
          */
         public function getId(): int {
                 return $this->id;
         }
 
         /**
-         *
          * @param array $formData
-         *
          */
         public function setFormData(array $formData): void{
                 $this->formData = $formData;
         }
 
         /**
-         *
          * @return array
-         *
          */
         public function getFormData(): array{
                 return $this->formData;
         }
 
         /**
-         *
          * @return string
-         *
          */
         public function getEncodedFormData(): string{
                 return json_encode($this->formData);
         }
 
         /**
-         *
          * @param Player $player
-         *
          */
         public function send(Player $player) {
                 $data = (string) $this->getEncodedFormData();
                 $pk = new ModalFormRequestPacket();
                 $pk->formData = $data;
                 $pk->formId = $this->id;
-                $player->dataPacket($pk);
+                $player->sendDataPacket($pk);
         }
 
         /**
-         *
          * @param string $title
-         *
          */
         public function setTitle(string $title) {
                 $this->formData["title"] = $title;
         }
 
         /**
-         *
          * @param string $label
-         *
          */
         public function setLabel(string $label) {
                 $this->formData["content"][] = [
@@ -105,10 +87,8 @@ class CustomForm {
         }
 
         /**
-         *
          * @param string    $toggle
          * @param bool|null $value
-         *
          */
         public function setToggle(string $toggle, bool $value = null){
                 $this->formData["content"][] = [
@@ -119,13 +99,11 @@ class CustomForm {
         }
 
         /**
-         *
          * @param string   $slider
          * @param int      $min
          * @param int      $max
          * @param int|null $step
          * @param int|null $default
-         *
          */
         public function setSlider(string $slider, int $min, int $max, int $step = null, int $default = null){
                 $this->formData["content"][] = [
@@ -139,11 +117,9 @@ class CustomForm {
         }
 
         /**
-         *
          * @param string   $dropdown
          * @param array    $options
          * @param int|null $default
-         *
          */
         public function setDropdown(string $dropdown, array $options, int $default = null){
                 $this->formData["content"][] = [
@@ -155,11 +131,9 @@ class CustomForm {
         }
 
         /**
-         *
          * @param string      $input
          * @param string      $placeholder
          * @param string|null $default
-         *
          */
         public function setInput(string $input, string $placeholder = '', string $default = null){
                 $this->formData["content"][] = [

@@ -1,9 +1,22 @@
 <?php
-namespace TradeUI\Utils;
+namespace InfinityGamers\TradeUI\Utils;
 use pocketmine\level\Position;
 use pocketmine\Player;
 use RecursiveArrayIterator;
 use RecursiveIteratorIterator;
+use function strlen;
+use function stripos;
+use function str_replace;
+use function number_format;
+use function is_numeric, is_int, is_float;
+use function intval;
+use function array_rand;
+use function range;
+use function preg_match_all;
+use function preg_replace;
+use function array_keys, array_values;
+use function floatval;
+use function floor;
 class exc{
         const CHARS = [
             "=", "&", "<", ">", "/", "$", "#", "!", "-", "_", "+", ".", "@",
